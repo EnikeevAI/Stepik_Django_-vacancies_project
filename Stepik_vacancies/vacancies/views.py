@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import render
 from django.views import View
 
@@ -6,23 +7,13 @@ from vacancies.models import Company, Specialty, Vacancy
 
 class MainView(View):
     def get(self, request, *args, **kwargs):
-        specialty_dict = dict()
-        company_dict = dict()
         specialties = Specialty.objects.all()
         companies = Company.objects.all()
-        for specialty in specialties:
-            vacancies = Vacancy.objects.filter(specialty=specialty)
-            specialty_dict[specialty.code] = vacancies
-        for company in companies:
-            vacancies = Vacancy.objects.filter(company=company)
-            company_dict[company.name] = vacancies
         return render(
             request, 'vacancies/index.html',
             context={
                 'specialties': specialties,
-                'companies': companies,
-                'specialty_dict': specialty_dict,
-                'company_dict': company_dict
+                'companies': companies
             }
             )
 
@@ -39,9 +30,12 @@ class ListOfVacanciesView(View):
 
 
 class SpecializationView(View):
-    def get(self, request, *args, **kwargs):
-        specialty_name = kwargs['cat']
-        specialty = Specialty.objects.get(code=specialty_name)
+    def get(self, request, cat, *args, **kwargs):
+        specialty_cat = cat
+        try:
+            specialty = Specialty.objects.get(code=specialty_cat)
+        except Specialty.DoesNotExist:
+            raise Http404(f'Company with cat "{specialty_cat}" not exist')
         vacancies = Vacancy.objects.filter(specialty=specialty)
         return render(
             request, 'vacancies/vacancies.html',
@@ -53,9 +47,12 @@ class SpecializationView(View):
 
 
 class CompanyView(View):
-    def get(self, request, *args, **kwargs):
-        company_id = kwargs['id']
-        company = Company.objects.get(id=company_id)
+    def get(self, request, id, *args, **kwargs):
+        company_id = id
+        try:
+            company = Company.objects.get(id=company_id)
+        except Company.DoesNotExist:
+            raise Http404(f"Company with id={company_id} not exist")
         vacancies = Vacancy.objects.filter(company=company)
         return render(
             request, 'vacancies/company.html',
@@ -66,10 +63,13 @@ class CompanyView(View):
         )
 
 
-class VacanciesView(View):
-    def get(self, request, *args, **kwargs):
-        vacancy_id = kwargs['id']
-        vacancy = Vacancy.objects.get(id=vacancy_id)
+class VacancyView(View):
+    def get(self, request, id, *args, **kwargs):
+        vacancy_id = id
+        try:
+            vacancy = Vacancy.objects.get(id=vacancy_id)
+        except Vacancy.DoesNotExist:
+            raise Http404(f"Vacancy with id={vacancy_id} not exist")
         return render(
             request, 'vacancies/vacancy.html',
             context={

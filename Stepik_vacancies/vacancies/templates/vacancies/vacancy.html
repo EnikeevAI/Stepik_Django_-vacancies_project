@@ -8,7 +8,8 @@
         </div>
         <div class="col-12 col-lg-8">
             <section class="pl-3">
-                <a href="/companies/{{vacancy.company.id}}"><img src="{{vacancy.company.logo.url}}" width="130" height="80"
+                <a href="/companies/{{vacancy.company.id}}"><img src="{{vacancy.company.logo.url}}" width="130"
+                                                                 height="80"
                                                                  alt=""></a>
                 <div class="d-flex align-items-baseline align-content-baseline">
                     <h1 class="h2 mt-4 font-weight-bold">{{vacancy.title}}</h1>
@@ -31,24 +32,26 @@
                         {{vacancy.description}}<br>
                     </p>
                 </div>
-                <form action="/echo" class="card mt-4 mb-3">
+                {% if user is None %}
+                <div class="card-body mx-3">
+                    <p class="h5 mt-3 font-weight-normal">
+                        Для того, чтобы отозваться на вакансию, необходимо <a href="/register/">зарегистрироваться.</a>
+                        Есть аккаунт? <a href="/login/">Войдите!</a></p>
+                {% else %}
+                <form method="POST" action="/vacancies/{{vacancy.id}}" class="card mt-4 mb-3">
+                    {% csrf_token %}
                     <div class="card-body mx-3">
                         <p class="h5 mt-3 font-weight-normal">Отозваться на вакансию</p>
+                        {% for field in form %}
                         <div class="form-group">
-                            <label class="mb-1 mt-2" for="userName">Вас зовут</label>
-                            <input class="form-control" type="text" placeholder="" id="userName">
+                            <label class="mb-1 mt-2">{{ field.label_tag }}</label>
+                            {{ field }}
                         </div>
-                        <div class="form-group">
-                            <label class="mb-1" for="userPhone">Ваш телефон</label>
-                            <input class="form-control" type="tel" placeholder="" id="userPhone">
-                        </div>
-                        <div class="form-group">
-                            <label class="mb-1" for="userMsg">Сопроводительное письмо</label>
-                            <textarea class="form-control" rows="8" id="userMsg"></textarea>
-                        </div>
+                        {% endfor %}
                         <input type="submit" class="btn btn-primary mt-4 mb-2" value="Записаться на пробный урок">
                     </div>
                 </form>
+                {% endif %}
             </section>
         </div>
     </div>

@@ -16,17 +16,25 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.views import LogoutView
 from django.urls import path
 
-from vacancies.views import CompanyView, ListOfVacanciesView, MainView, SpecializationView, VacancyView
+from vacancies.views import CompanyView, ListOfVacanciesView, MainView, SendView, SpecializationView, UserLoginView, UserSignupView, VacancyView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', MainView.as_view()),
     path('companies/<int:id>', CompanyView.as_view()),
+    path('mycompany/', CompanyView.as_view()),
+    path('mycompany/vacancies/', ListOfVacanciesView.as_view()),
+    path('mycompany/vacancies/<int:id>', VacancyView.as_view()),
     path('vacancies/', ListOfVacanciesView.as_view()),
-    path('vacancies/<int:id>', VacancyView.as_view()),
+    path('vacancies/<int:vacancy_id>', VacancyView.as_view()),
+    path('vacancies/<int:vacancy_id>/send/', SendView.as_view()),
     path('vacancies/cat/<str:cat>', SpecializationView.as_view()),
+    path('login/', UserLoginView.as_view()),
+    path('logout/', LogoutView.as_view()),
+    path('register/', UserSignupView.as_view())
 ]
 
 if settings.DEBUG:

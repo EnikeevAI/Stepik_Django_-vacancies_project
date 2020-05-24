@@ -12,7 +12,6 @@ class Command(BaseCommand):
             Company.objects.create(
                 name=company['title'],
                 location=f"{company['title']} location",
-                #logo=f"static/company_logo/{company['logo']}",
                 description=f"{company['title']} description",
                 employee_count=random.randint(1, 10)
             )
@@ -21,8 +20,7 @@ class Command(BaseCommand):
         for speciality in specialties:
             Specialty.objects.create(
                 code=speciality['code'],
-                title=speciality['title'],
-                #picture=f"static/specialities_logo/specty_{speciality['code']}.png"
+                title=speciality['title']
             )
 
     def add_vacancy_table_dbdata(self, jobs=jobs, Vacancy=Vacancy, Company=Company, Specialty=Specialty):

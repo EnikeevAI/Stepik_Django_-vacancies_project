@@ -1,13 +1,12 @@
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views import View
-from django.views.generic import CreateView
 
 from vacancies.models import Application, Company, Specialty, Vacancy
-from vacancies.forms import UserApplicationForm, UserAuthenticationForm, UserRegisterForm
+from vacancies.forms import UserApplicationForm, UserAuthenticationForm, UserCompanyEditForm, UserRegisterForm
+
 
 class MainView(View):
     def get(self, request, *args, **kwargs):
@@ -20,12 +19,6 @@ class MainView(View):
                 'companies': companies
             }
             )
-
-
-class UserRegisterView(CreateView):
-   form_class = UserCreationForm
-   success_url = 'login'
-   template_name = 'vacancies/register.html'
 
 
 class ListOfVacanciesView(View):
@@ -41,11 +34,10 @@ class ListOfVacanciesView(View):
 
 class SpecializationView(View):
     def get(self, request, cat, *args, **kwargs):
-        specialty_cat = cat
         try:
-            specialty = Specialty.objects.get(code=specialty_cat)
+            specialty = Specialty.objects.get(code=cat)
         except Specialty.DoesNotExist:
-            raise Http404(f'Company with cat "{specialty_cat}" not exist')
+            raise Http404(f'Company with cat "{cat}" not exist')
         vacancies = Vacancy.objects.filter(specialty=specialty)
         return render(
             request, 'vacancies/vacancies.html',
@@ -117,16 +109,10 @@ class VacancyView(View):
         user = self.get_current_user(request)
         vacancy = self.get_vacancy(vacancy_id)
         if form.is_valid() and user is not None:
-            username = form.cleaned_data['username']
-            userphone = form.cleaned_data['userphone']
-            usermsg =  form.cleaned_data['usermsg']
-            Application.objects.create(
-                written_username=username,
-                written_phone=userphone,
-                written_cover_letter=usermsg,
-                vacancy=vacancy,
-                user=user
-            )
+            form = form.save(commit=False)
+            form.vacancy = vacancy
+            form.user = user
+            form.save()
             return redirect(f'/vacancies/{vacancy_id}/send/')
 
         return render(
@@ -137,6 +123,72 @@ class VacancyView(View):
                 'user': user
             }
         )
+
+
+class UserCompanyCreate(View):
+    template_company_create = 'vacancies/company_create.html'
+
+    def get(self, request):
+        return render(
+            request, self.template_company_create, context={}
+        )
+
+    def post(self, request):
+        user = User.objects.filter(username=request.user).first()
+        Company.objects.create(
+            name='Введите название компании',
+            location='Введите местоположение компании',
+            description='Введите описание компании',
+            employee_count=1,
+            logo=None,
+            owner=user
+        )
+        return redirect('/mycompany/')
+
+
+class UserCompanyView(View):
+    template_company_edit = 'vacancies/company_edit.html'
+    model_changed = False
+
+    def initializing_the_form_on_request(self, request):
+        user = User.objects.filter(username=request.user).first()
+        company = Company.objects.filter(owner=user).first()
+        if request.method == 'GET':
+            form = UserCompanyEditForm(instance=company)
+        else:
+            form = UserCompanyEditForm(request.POST, request.FILES, instance=company)
+        return user, company, form
+
+    def get(self, request):
+        user, company, form = self.initializing_the_form_on_request(request)
+        if company is None:
+            return redirect('/mycompany/create/')
+        return render(
+            request, self.template_company_edit,
+            context={
+                'form': form,
+                'company': company,
+                'model_changed': self.model_changed
+            }
+        )
+
+    def post(self, request):
+        user, company, form = self.initializing_the_form_on_request(request)
+        if form.is_valid():
+            post_form = form.save(commit=False)
+            post_form.owner = user
+            post_form.save()
+            self.model_changed = True
+            return redirect('/mycompany/')
+        else:
+            form = UserCompanyEditForm(instance=company)
+        return render(
+            request, self.template_company_edit,
+            context={
+                'form': form,
+                'company': company,
+                'model_changed': self.model_changed
+            })
 
 
 class UserLoginView(LoginView):
@@ -160,17 +212,7 @@ class UserSignupView(LoginView):
     def post(self, request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                password=password
-            )
-            user.save()
+            form.save()
             return redirect('/login/')
         return render(
             request, self.template_name,

@@ -19,13 +19,15 @@ from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
 
-from vacancies.views import CompanyView, ListOfVacanciesView, MainView, SendView, SpecializationView, UserLoginView, UserSignupView, VacancyView
+from vacancies.views import CompanyView, ListOfVacanciesView, MainView, SendView, SpecializationView, \
+    UserCompanyCreate,UserCompanyView, UserLoginView, UserSignupView, VacancyView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', MainView.as_view()),
     path('companies/<int:id>', CompanyView.as_view()),
-    path('mycompany/', CompanyView.as_view()),
+    path('mycompany/', UserCompanyView.as_view()),
+    path('mycompany/create/', UserCompanyCreate.as_view()),
     path('mycompany/vacancies/', ListOfVacanciesView.as_view()),
     path('mycompany/vacancies/<int:id>', VacancyView.as_view()),
     path('vacancies/', ListOfVacanciesView.as_view()),
@@ -40,4 +42,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
-

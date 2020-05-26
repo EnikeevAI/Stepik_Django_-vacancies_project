@@ -2,7 +2,9 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UsernameField, UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Application
+from .models import Application, Company
+
+
 
 class UserAuthenticationForm(AuthenticationForm):
     username = UsernameField(
@@ -15,7 +17,7 @@ class UserAuthenticationForm(AuthenticationForm):
         )
     )
     password = forms.CharField(
-        label=("Пароль"),
+        label="Пароль",
         widget=forms.PasswordInput(
             attrs={
                 'autofocus': True,
@@ -25,7 +27,69 @@ class UserAuthenticationForm(AuthenticationForm):
     )
 
 
-class UserRegisterForm(forms.Form):
+class UserCompanyEditForm(forms.ModelForm):
+    name = forms.CharField(
+        max_length=64,
+        label='Название компании',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'id': 'companyName',
+                'type': 'text',
+                }
+        )
+    )
+    location = forms.CharField(
+        max_length=64,
+        label='География',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'id': 'companyLocation',
+                'type': 'text'
+                }
+        )
+    )
+    logo = forms.FileField(
+        label='Логотип',
+        widget=forms.FileInput(
+            attrs={
+                'class': 'custom-file-input',
+                'id': 'inputGroupFile01',
+
+            }
+        )
+    )
+    description = forms.CharField(
+        max_length=200,
+        label='Информация о компании',
+        widget=forms.Textarea(
+            attrs={
+                'class': 'form-control',
+                'id': 'companyInfo',
+                'rows': '4',
+                'style': 'color:#000;'
+                }
+        )
+    )
+    employee_count = forms.IntegerField(
+        label='Количество человек в компании',
+        widget=forms.TextInput(
+            attrs={
+                'class': 'form-control',
+                'id': 'companyTeam',
+                }
+        )
+    )
+
+
+    class Meta:
+        model = Company
+        fields = ('name', 'location', 'logo', 'description', 'employee_count',)
+
+
+
+class UserRegisterForm(forms.ModelForm):
     username = forms.CharField(
         label='Логин',
         widget=forms.TextInput(
@@ -54,7 +118,7 @@ class UserRegisterForm(forms.Form):
         )
     )
     password = forms.CharField(
-        label=("Пароль"),
+        label="Пароль",
         widget=forms.PasswordInput(
             attrs={
                 'autofocus': True,
@@ -69,8 +133,9 @@ class UserRegisterForm(forms.Form):
         fields = ('username', 'password', 'first_name', 'last_name',)
 
 
-class UserApplicationForm(forms.Form):
-    username = forms.CharField(
+class UserApplicationForm(forms.ModelForm):
+    written_username = forms.CharField(
+        max_length=64,
         label='Вас зовут',
         widget=forms.TextInput(
             attrs={
@@ -80,7 +145,8 @@ class UserApplicationForm(forms.Form):
                 'placeholder': ''}
         )
     )
-    userphone = forms.CharField(
+    written_phone = forms.CharField(
+        max_length=64,
         label='Ваш телефон',
         widget=forms.TextInput(
             attrs={
@@ -90,17 +156,20 @@ class UserApplicationForm(forms.Form):
                 'placeholder': ''}
         )
     )
-    usermsg = forms.CharField(
+    written_cover_letter = forms.CharField(
+        max_length=500,
         label='Сопроводительное письмо',
         widget=forms.Textarea(
             attrs={
                 'rows': '8',
                 'class': 'form-control',
-                'id': 'userЬып',
+                'id': 'userMsg',
                 }
         )
     )
 
+
     class Meta:
         model = Application
-        fields = ('username', 'userphone', 'usermsg',)
+        fields = ('written_username', 'written_phone', 'written_cover_letter',)
+

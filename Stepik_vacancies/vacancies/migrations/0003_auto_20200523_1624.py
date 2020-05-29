@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('vacancies', '0002_auto_20200516_1619'),
@@ -16,7 +15,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='company',
             name='owner',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='company', to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='company',
+                                    to=settings.AUTH_USER_MODEL),
         ),
         migrations.AlterField(
             model_name='company',
@@ -26,7 +26,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='specialty',
             name='picture',
-            field=models.ImageField(height_field='height_field', upload_to='specialities_logo', width_field='width_field'),
+            field=models.ImageField(height_field='height_field', upload_to='specialities_logo',
+                                    width_field='width_field'),
         ),
         migrations.CreateModel(
             name='Application',
@@ -35,8 +36,10 @@ class Migration(migrations.Migration):
                 ('written_username', models.CharField(max_length=64)),
                 ('written_phone', models.CharField(max_length=64)),
                 ('written_cover_letter', models.CharField(max_length=64)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications', to=settings.AUTH_USER_MODEL)),
-                ('vacancy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications', to='vacancies.Vacancy')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications',
+                                           to=settings.AUTH_USER_MODEL)),
+                ('vacancy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='applications',
+                                              to='vacancies.Vacancy')),
             ],
         ),
     ]

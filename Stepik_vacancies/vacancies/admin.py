@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import Application, Company, Specialty, Vacancy
 
+
 class ApplicationAdmin(admin.ModelAdmin):
     pass
 

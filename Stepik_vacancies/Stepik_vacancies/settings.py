@@ -121,7 +121,7 @@ USE_TZ = True
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-MEDIA_URL='/media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = 'media'
 MEDIA_COMPANY_IMAGE_DIR = 'company_logo'
 MEDIA_SPECIALITY_IMAGE_DIR = 'specialities_logo'

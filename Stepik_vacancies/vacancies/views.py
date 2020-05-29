@@ -5,7 +5,8 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from vacancies.models import Application, Company, Specialty, Vacancy
-from vacancies.forms import UserApplicationForm, UserAuthenticationForm, UserCompanyEditForm, UserRegisterForm
+from vacancies.forms import UserApplicationForm, UserAuthenticationForm, UserCompanyEditForm, \
+    UserCompanyVacancyEditForm, UserRegisterForm
 
 
 class MainView(View):
@@ -18,7 +19,7 @@ class MainView(View):
                 'specialties': specialties,
                 'companies': companies
             }
-            )
+        )
 
 
 class ListOfVacanciesView(View):
@@ -125,12 +126,12 @@ class VacancyView(View):
         )
 
 
-class UserCompanyCreate(View):
-    template_company_create = 'vacancies/company_create.html'
+class UserCompanyCreateView(View):
+    template_name = 'vacancies/company_create.html'
 
     def get(self, request):
         return render(
-            request, self.template_company_create, context={}
+            request, self.name, context={}
         )
 
     def post(self, request):
@@ -147,7 +148,7 @@ class UserCompanyCreate(View):
 
 
 class UserCompanyView(View):
-    template_company_edit = 'vacancies/company_edit.html'
+    template_name = 'vacancies/company_edit.html'
     model_changed = False
 
     def initializing_the_form_on_request(self, request):
@@ -164,7 +165,7 @@ class UserCompanyView(View):
         if company is None:
             return redirect('/mycompany/create/')
         return render(
-            request, self.template_company_edit,
+            request, self.template_name,
             context={
                 'form': form,
                 'company': company,
@@ -183,12 +184,90 @@ class UserCompanyView(View):
         else:
             form = UserCompanyEditForm(instance=company)
         return render(
-            request, self.template_company_edit,
+            request, self.template_name,
             context={
                 'form': form,
                 'company': company,
                 'model_changed': self.model_changed
             })
+
+
+class UserCompanyVacanciesView(LoginView):
+    template_name = 'vacancies/vacancy-list.html'
+
+    def get(self, request):
+        user = User.objects.filter(username=request.user).first()
+        company = Company.objects.filter(owner=user).first()
+        if company is None:
+            return redirect('/mycompany/create/')
+        vacancies = Vacancy.objects.filter(company=company).all()
+        return render(
+            request, self.template_name,
+            context={
+                'vacancies': vacancies
+            }
+        )
+
+
+class UserCompanyVacancyEditView(LoginView):
+    template_name = 'vacancies/vacancy-edit.html'
+    model_changed = False
+
+    def get(self, request, vacancy_id):
+        vacancy = Vacancy.objects.filter(id=vacancy_id).first()
+        user = User.objects.filter(username=request.user).first()
+        company = Company.objects.filter(owner=user).first()
+        if vacancy:
+            form = UserCompanyVacancyEditForm(instance=vacancy)
+        else:
+            specialty = Specialty.objects.all().first()
+            vacancy = Vacancy.objects.create(
+                title='Введите название вакансии',
+                company=company,
+                skills='Введите требуемые навыки',
+                description='Введите описание',
+                salary_min=0,
+                salary_max=0,
+                specialty=specialty
+            )
+            form = UserCompanyVacancyEditForm(instance=vacancy)
+        applications = Application.objects.filter(vacancy=vacancy).all()
+        return render(
+            request, self.template_name,
+            context={
+                'applications': applications,
+                'company': company,
+                'form': form,
+                'model_changed': self.model_changed,
+                'vacancy': vacancy
+            }
+        )
+
+    def post(self, request, vacancy_id):
+        vacancy = Vacancy.objects.filter(id=vacancy_id).first()
+        user = User.objects.filter(username=request.user).first()
+        company = Company.objects.filter(owner=user).first()
+        form = UserCompanyVacancyEditForm(request.POST, instance=vacancy)
+        if form.is_valid():
+            specialty = Specialty.objects.filter(title=request.POST['specialty']).first()
+            post_form = form.save(commit=False)
+            post_form.specialty = specialty
+            post_form.company = company
+            post_form.save()
+            self.model_changed = True
+        else:
+            form = UserCompanyVacancyEditForm(instance=vacancy)
+        applications = Application.objects.filter(vacancy=vacancy).all()
+        return render(
+            request, self.template_name,
+            context={
+                'applications': applications,
+                'company': company,
+                'form': form,
+                'model_changed': self.model_changed,
+                'vacancy': vacancy,
+            }
+        )
 
 
 class UserLoginView(LoginView):

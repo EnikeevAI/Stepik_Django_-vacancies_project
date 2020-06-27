@@ -291,17 +291,7 @@ class UserSignupView(LoginView):
     def post(self, request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            username = form.cleaned_data['username']
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            password = form.cleaned_data['password']
-            user = User.objects.create_user(
-                username=username,
-                first_name=first_name,
-                last_name=last_name,
-                password=password
-            )
-            #form.save()
+            user = User.objects.create_user(**form.cleaned_data)
             user.save()
             return redirect('/login/')
         return render(

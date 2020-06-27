@@ -1,7 +1,7 @@
+from django.db.models import Count
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from django.http import Http404
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
 from vacancies.models import Application, Company, Specialty, Vacancy
@@ -11,8 +11,8 @@ from vacancies.forms import UserApplicationForm, UserAuthenticationForm, UserCom
 
 class MainView(View):
     def get(self, request, *args, **kwargs):
-        specialties = Specialty.objects.all()
-        companies = Company.objects.all()
+        companies = Company.objects.annotate(Count('vacancies'))
+        specialties = Specialty.objects.annotate(Count('vacancies'))
         return render(
             request, 'vacancies/index.html',
             context={
@@ -35,10 +35,7 @@ class ListOfVacanciesView(View):
 
 class SpecializationView(View):
     def get(self, request, cat, *args, **kwargs):
-        try:
-            specialty = Specialty.objects.get(code=cat)
-        except Specialty.DoesNotExist:
-            raise Http404(f'Company with cat "{cat}" not exist')
+        specialty = get_object_or_404(Specialty, code=cat)
         vacancies = Vacancy.objects.filter(specialty=specialty)
         return render(
             request, 'vacancies/vacancies.html',
@@ -50,12 +47,8 @@ class SpecializationView(View):
 
 
 class CompanyView(View):
-    def get(self, request, id, *args, **kwargs):
-        company_id = id
-        try:
-            company = Company.objects.get(id=company_id)
-        except Company.DoesNotExist:
-            raise Http404(f"Company with id={company_id} not exist")
+    def get(self, request, company_id, *args, **kwargs):
+        company = get_object_or_404(Company, id=company_id)
         vacancies = Vacancy.objects.filter(company=company)
         return render(
             request, 'vacancies/company.html',
@@ -67,10 +60,10 @@ class CompanyView(View):
 
 
 class SendView(View):
-    template_name = 'vacancies/sent.html'
+    template_name = 'vacancies/send.html'
 
     def get(self, request, vacancy_id):
-        vacancy = Vacancy.objects.get(id=vacancy_id)
+        vacancy = get_object_or_404(Vacancy, id=vacancy_id)
         return render(
             request, self.template_name,
             context={
@@ -86,10 +79,7 @@ class VacancyView(View):
         return request.user if request.user.is_authenticated else None
 
     def get_vacancy(self, vacancy_id):
-        try:
-            vacancy = Vacancy.objects.get(id=vacancy_id)
-        except Vacancy.DoesNotExist:
-            raise Http404(f"Vacancy with id={vacancy_id} not exist")
+        vacancy = get_object_or_404(Vacancy, id=vacancy_id)
         return vacancy
 
     def get(self, request, vacancy_id, *args, **kwargs):
@@ -131,18 +121,17 @@ class UserCompanyCreateView(View):
 
     def get(self, request):
         return render(
-            request, self.name, context={}
+            request, self.template_name, context={}
         )
 
     def post(self, request):
-        user = User.objects.filter(username=request.user).first()
         Company.objects.create(
             name='Введите название компании',
             location='Введите местоположение компании',
             description='Введите описание компании',
             employee_count=1,
             logo=None,
-            owner=user
+            owner=request.user
         )
         return redirect('/mycompany/')
 
@@ -152,7 +141,7 @@ class UserCompanyView(View):
     model_changed = False
 
     def initializing_the_form_on_request(self, request):
-        user = User.objects.filter(username=request.user).first()
+        user = request.user
         company = Company.objects.filter(owner=user).first()
         if request.method == 'GET':
             form = UserCompanyEditForm(instance=company)
@@ -196,7 +185,7 @@ class UserCompanyVacanciesView(LoginView):
     template_name = 'vacancies/vacancy-list.html'
 
     def get(self, request):
-        user = User.objects.filter(username=request.user).first()
+        user = request.user
         company = Company.objects.filter(owner=user).first()
         if company is None:
             return redirect('/mycompany/create/')
@@ -215,7 +204,7 @@ class UserCompanyVacancyEditView(LoginView):
 
     def get(self, request, vacancy_id):
         vacancy = Vacancy.objects.filter(id=vacancy_id).first()
-        user = User.objects.filter(username=request.user).first()
+        user = request.user
         company = Company.objects.filter(owner=user).first()
         if vacancy:
             form = UserCompanyVacancyEditForm(instance=vacancy)
@@ -245,7 +234,7 @@ class UserCompanyVacancyEditView(LoginView):
 
     def post(self, request, vacancy_id):
         vacancy = Vacancy.objects.filter(id=vacancy_id).first()
-        user = User.objects.filter(username=request.user).first()
+        user = request.user
         company = Company.objects.filter(owner=user).first()
         form = UserCompanyVacancyEditForm(request.POST, instance=vacancy)
         if form.is_valid():

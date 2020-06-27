@@ -34,10 +34,14 @@
                 <div class="card pt-4 text-center mb-4">
                     <img class="mx-auto d-block" src="{{specialty.picture.url}}" width="80" height="80" alt="">
                     <div class="card-body">
-                        <p class="card-text mb-2">{{specialty.title}}</p>
+                        <p class="card-text mb-2">{{ specialty }}</p>
                         <p class="card-text"><a href="/vacancies/cat/{{specialty.code}}">
-                            {{ specialty.title }}
-                            {{ specialty.vacancies.count }} вакансий</a></p>
+                            {% if specialty.vacancies__count > 0 %}
+                                Количество вакансий: {{ specialty.vacancies__count }}
+                            {% else %}
+                                Вакансий нет
+                            {% endif %}
+                        </a></p>
                     </div>
                 </div>
             </div>
@@ -56,9 +60,12 @@
                     </a>
                     <div class="card-body">
                         <p class="card-text"><a href="/companies/{{company.id}}">
-                            {{ company.title }}
-                            {{ company.vacancies.count }} вакансий</a></p>
-
+                            {% if company.vacancies__count > 0 %}
+                                Количество вакансий: {{ company.vacancies__count }}
+                            {% else %}
+                                Вакансий нет
+                            {% endif %}
+                        </a></p>
                     </div>
                 </div>
             </div>

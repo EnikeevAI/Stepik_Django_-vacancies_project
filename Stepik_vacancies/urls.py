@@ -26,7 +26,7 @@ from vacancies.views import CompanyView, ListOfVacanciesView, MainView, SendView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', MainView.as_view()),
-    path('companies/<int:id>', CompanyView.as_view()),
+    path('companies/<int:company_id>', CompanyView.as_view()),
     path('mycompany/', UserCompanyView.as_view()),
     path('mycompany/create/', UserCompanyCreateView.as_view()),
     path('mycompany/vacancies/', UserCompanyVacanciesView.as_view()),

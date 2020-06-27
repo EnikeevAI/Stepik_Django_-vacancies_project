@@ -1,0 +1,1 @@
+web: gunicorn Stepik_vacancies.wsgi
